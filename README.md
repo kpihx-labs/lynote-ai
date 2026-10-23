@@ -1,5 +1,21 @@
 # Explainable AI Text Risk Analyzer
 
+## KpihX-Labs distribution
+
+This MIT-licensed adaptation preserves the upstream contributors and history:
+https://github.com/lynote-ai/ai-text-detector.
+The distribution and executable are `lynote-ai`; the internal Python package is `aidetect`.
+Install with `uv tool install lynote-ai`, or use `make uv-link` from this checkout.
+Run `lynote-ai document.txt --json`; results go to stdout, not a persistent database.
+Use `make check`, `make uv-build`, `make uv-publish`, and `make push`.
+`make puhsb` aliases `make push` for both SSH remotes (`github` and `gitlab`).
+The local analyzer uses heuristics, not Lynote's hosted model. A low score is not
+proof of human authorship, and an insufficient-text result is an abstention.
+This is not a plagiarism or source-matching service.
+
+The remaining upstream documentation is retained for provenance. Its `ai-detect`
+examples refer to the old command; this distribution exposes only `lynote-ai`.
+
 <p align="center">
   <img src="assets/hero.svg" alt="AI Detector Skill hero" width="100%" />
 </p>
