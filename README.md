@@ -13,8 +13,8 @@ The local analyzer uses heuristics, not Lynote's hosted model. A low score is no
 proof of human authorship, and an insufficient-text result is an abstention.
 This is not a plagiarism or source-matching service.
 
-The remaining upstream documentation is retained for provenance. Its `ai-detect`
-examples refer to the old command; this distribution exposes only `lynote-ai`.
+The remaining upstream documentation is retained for provenance, with operational
+examples updated from the historical `ai-detect` command to `uv run lynote-ai`.
 
 <p align="center">
   <img src="assets/hero.svg" alt="AI Detector Skill hero" width="100%" />
@@ -112,8 +112,8 @@ Plans, rate limits, and full docs: **[lynote.ai/ai-detector-api](https://lynote.
 ## Install
 
 ```bash
-pip install -e .
-ai-detect examples/sample_ai_like.txt --json
+uv sync
+uv run lynote-ai examples/sample_ai_like.txt --json
 ```
 
 Or bootstrap a local environment:
@@ -157,9 +157,9 @@ Not:
 ### CLI
 
 ```bash
-ai-detect examples/sample_ai_like.txt
-cat essay.txt | ai-detect --json
-python scripts/detect.py examples/sample_human_like.txt --json
+uv run lynote-ai examples/sample_ai_like.txt
+cat essay.txt | uv run lynote-ai --json
+uv run python scripts/detect.py examples/sample_human_like.txt --json
 ```
 
 ### Python API
@@ -219,7 +219,7 @@ A teacher receives a polished 400-word reflection and wants a cautious signal be
 
 Suggested workflow:
 
-1. Run `ai-detect submission.txt --json`.
+1. Run `uv run lynote-ai submission.txt --json`.
 2. Read the strongest signals and caveats.
 3. Compare the passage with known writing samples before making any judgment.
 

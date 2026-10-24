@@ -58,15 +58,16 @@ Makefile              全部工作流入口；make help 列出
 流水线额外需要 `torch`、`transformers>=5` 与 FastAPI 技术栈。
 
 ```bash
-conda create -n test python=3.12
-conda run -n test pip install -r requirements-test.txt
+cd detection-model-pipeline  # 从仓库根目录进入
+uv sync --locked
 make check
 ```
 
-在命名 conda 环境之外，覆盖解释器即可：
+模型依赖为可选项。Makefile 默认使用 `BACKEND=xpu`，也可显式选择 CPU 或 NVIDIA CUDA：
 
 ```bash
-make check PYTHON=python
+make sync-cpu                  # 或 make sync-xpu / make sync-cuda
+make test-all BACKEND=cpu       # 完整测试不需要下载模型权重
 ```
 
 `make check` 依次执行四项校验：manifest schema、demo 数据门禁（仅合成记录、
@@ -74,8 +75,13 @@ make check PYTHON=python
 英文文档无中文混入）与轻量测试子集（分句器、数据准备、harness 校验器）。
 整个过程无需模型推理或训练。
 
-完整 51 个测试需要模型依赖：先 `pip install -r requirements-model.txt
--r requirements-test.txt`，再 `make test-all`。
+原有完整测试集包含 51 个测试，仍通过 `make test-all` 运行。
+直接运行脚本时使用 `uv run --extra model --extra cpu python code/<stage>.py`，
+也可把 `cpu` 换成 `xpu` 或 `cuda`。硬件配置互斥，分别绑定显式 PyTorch 索引。
+基础同步和 `make check` 不安装 torch。XPU 配置只选择 Intel 依赖包；上游阶段脚本
+目前优先选择 CUDA，否则使用 CPU。Intel 加速仍需要单独修改运行时设备选择逻辑。
+上游 requirements 文件保留为历史依赖记录，
+当前环境以 `pyproject.toml` 和 `uv.lock` 为准。
 
 ## 公开 demo 数据
 
@@ -126,7 +132,8 @@ make data DATA_CSV=/path/to/new_export.csv \
   OLD_SCAN_JSONLS="/path/to/old_dataset.jsonl"
 ```
 
-`make check` 永不需要 GPU、网络或模型权重。训练首次运行会从 Hugging Face hub
+首次 UV 依赖同步后，`make check` 不需要 GPU 或模型权重，可用 `UV_OFFLINE=1 make check`
+离线运行。训练首次运行会从 Hugging Face hub
 下载 backbone checkpoint（`xlmr` 为 `FacebookAI/xlm-roberta-large`，
 `modernbert` 为 `answerdotai/ModernBERT-base`）；传 `--init-from` / `INIT_FROM`
 可改用本地快照。

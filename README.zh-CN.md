@@ -94,8 +94,8 @@ curl https://api.lynote.ai/v1/detect \
 ## 快速开始
 
 ```bash
-pip install -e .
-ai-detect examples/sample_ai_like.txt --json
+uv sync
+uv run lynote-ai examples/sample_ai_like.txt --json
 ```
 
 或者使用初始化脚本：
@@ -139,9 +139,9 @@ Words analyzed: 256
 ### CLI
 
 ```bash
-ai-detect examples/sample_ai_like.txt
-cat essay.txt | ai-detect --json
-python scripts/detect.py examples/sample_human_like.txt --json
+uv run lynote-ai examples/sample_ai_like.txt
+cat essay.txt | uv run lynote-ai --json
+uv run python scripts/detect.py examples/sample_human_like.txt --json
 ```
 
 ### Python API
@@ -201,7 +201,7 @@ make eval-hc3
 
 建议流程：
 
-1. 运行 `ai-detect submission.txt --json`。
+1. 运行 `uv run lynote-ai submission.txt --json`。
 2. 查看最强信号和注意事项。
 3. 和学生已知写作样本对比后，再决定是否继续跟进。
 

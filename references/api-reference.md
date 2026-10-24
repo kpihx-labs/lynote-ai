@@ -5,14 +5,14 @@
 Primary command:
 
 ```bash
-ai-detect path/to/text.txt --json
+uv run lynote-ai path/to/text.txt --json
 ```
 
 Alternative entry points:
 
 ```bash
-python -m aidetect.cli path/to/text.txt --json
-python scripts/detect.py path/to/text.txt --json
+uv run python -m aidetect.cli path/to/text.txt --json
+uv run python scripts/detect.py path/to/text.txt --json
 ```
 
 When no file path is provided, the CLI reads from stdin.

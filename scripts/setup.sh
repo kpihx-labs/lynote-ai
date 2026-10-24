@@ -2,13 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VENV_DIR="${ROOT_DIR}/.venv"
-
-python3 -m venv "${VENV_DIR}"
-source "${VENV_DIR}/bin/activate"
-python -m pip install --upgrade pip
-python -m pip install -e "${ROOT_DIR}"
+command -v uv >/dev/null || { echo "uv is required: https://docs.astral.sh/uv/" >&2; exit 1; }
+uv sync --project "${ROOT_DIR}"
 
 echo "Environment ready."
-echo "Activate with: source ${VENV_DIR}/bin/activate"
-echo "Run detector with: ai-detect examples/sample_ai_like.txt --json"
+echo "Run from the repository: uv run lynote-ai examples/sample_ai_like.txt --json"

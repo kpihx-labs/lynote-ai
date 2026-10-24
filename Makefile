@@ -6,7 +6,7 @@ test:
 	uv run --with pytest python -m pytest tests -q
 
 demo:
-	uv run python -m aidetect.cli examples/sample_ai_like.txt
+	uv run lynote-ai examples/sample_ai_like.txt
 
 benchmark:
 	uv run python scripts/benchmark.py --markdown docs/BENCHMARK.md

@@ -17,13 +17,13 @@ Use it when the user asks whether a passage, essay, email, article, review, or m
 ## How to run
 
 ```bash
-ai-detect path/to/text.txt --json
+uv run lynote-ai path/to/text.txt --json
 ```
 
 or:
 
 ```bash
-python -m aidetect.cli path/to/text.txt --json
+uv run python -m aidetect.cli path/to/text.txt --json
 ```
 
 ## Response format for users

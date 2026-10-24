@@ -20,13 +20,13 @@ Use this skill when a user asks whether a passage may be AI-generated.
 From this repository:
 
 ```bash
-ai-detect path/to/text.txt --json
+uv run lynote-ai path/to/text.txt --json
 ```
 
 or:
 
 ```bash
-python -m aidetect.cli path/to/text.txt --json
+uv run python -m aidetect.cli path/to/text.txt --json
 ```
 
 ## Respond

@@ -159,7 +159,7 @@ def _render_markdown(summary: dict, subsets: tuple[str, ...], limit: int) -> str
         "## Reproduce",
         "",
         "```bash",
-        "python scripts/evaluate_hc3.py --markdown docs/HC3_EVALUATION.md",
+        "uv run python scripts/evaluate_hc3.py --markdown docs/HC3_EVALUATION.md",
         "```",
         "",
         "## Caveats",

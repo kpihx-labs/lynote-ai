@@ -4,7 +4,7 @@ Keep the project small, explainable, and honest.
 
 ## Recommended Workflow
 
-1. Install locally with `pip install -e .` or `bash scripts/setup.sh`.
+1. Install locally with `uv sync` or `bash scripts/setup.sh`; no activation is needed.
 2. Run `make test`.
 3. Run `make benchmark`.
 4. Update `SKILL.md`, `README.md`, and `references/api-reference.md` when public behavior changes.

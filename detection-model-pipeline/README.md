@@ -62,15 +62,17 @@ Python 3.12 is recommended. The light validation path only needs `PyYAML`,
 `transformers>=5`, and the FastAPI stack.
 
 ```bash
-conda create -n test python=3.12
-conda run -n test pip install -r requirements-test.txt
+cd detection-model-pipeline  # from the repository root
+uv sync --locked
 make check
 ```
 
-Outside the named conda environment, override the interpreter:
+Model dependencies are optional. Select exactly one backend; the Makefile defaults
+to `BACKEND=xpu` (Intel). CPU and NVIDIA CUDA are explicit alternatives:
 
 ```bash
-make check PYTHON=python
+make sync-cpu                  # or make sync-xpu / make sync-cuda
+make test-all BACKEND=cpu       # full suite, no downloaded model weights needed
 ```
 
 `make check` runs four validations: the manifest schema, the demo data gate
@@ -79,8 +81,15 @@ the bilingual documentation gate (relative links, Mermaid blocks, no Chinese tex
 in English documents), and the light test subset (sentence splitter, dataset
 preparation, harness validators). No model inference or training is needed.
 
-The full 51-test suite requires the model dependencies and runs with
-`make test-all` after `pip install -r requirements-model.txt -r requirements-test.txt`.
+The original full suite contains 51 tests and remains available with `make test-all`.
+Direct script execution uses `uv run --extra model --extra cpu python code/<stage>.py`
+(replace `cpu` with `xpu` or `cuda`). Hardware extras are mutually exclusive and
+use explicit PyTorch indexes. The base sync and `make check` do not install torch.
+The XPU profile selects Intel wheels only: upstream stage scripts currently choose
+CUDA when available and otherwise CPU. XPU device execution needs a separate runtime
+update; installing the XPU profile does not yet enable Intel acceleration.
+The upstream requirements files are retained as historical dependency records;
+`pyproject.toml` and `uv.lock` define the current environment.
 
 ## Public demo data
 
@@ -132,7 +141,8 @@ make data DATA_CSV=/path/to/new_export.csv \
   OLD_SCAN_JSONLS="/path/to/old_dataset.jsonl"
 ```
 
-`make check` never needs a GPU, network access, or model weights. Training
+After the initial UV dependency sync, `make check` needs no GPU or model weights
+and can run offline with `UV_OFFLINE=1 make check`. Training
 downloads the backbone checkpoint from the Hugging Face hub on first use
 (`FacebookAI/xlm-roberta-large` for `xlmr`, `answerdotai/ModernBERT-base` for
 `modernbert`); pass `--init-from` / `INIT_FROM` to use a local snapshot instead.

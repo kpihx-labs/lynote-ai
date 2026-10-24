@@ -1,13 +1,16 @@
-# Recipe 使用 Bash。
-SHELL := /bin/bash
+# Recipe 使用 Zsh。
+SHELL := /bin/zsh
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := help
 
 # 保持工作区与发布包不产生 Python bytecode 缓存。
 export PYTHONDONTWRITEBYTECODE := 1
 
-# 本地默认使用项目约定的 Conda 环境；CI 可通过 PYTHON=python 覆盖。
-PYTHON ?= conda run --no-capture-output -n test python
+# 轻量验证不加载模型；模型操作默认使用 Intel XPU，可设 BACKEND=cpu 或 cuda。
+UV ?= uv
+BACKEND ?= xpu
+PYTHON = $(UV) run --project "$(PROJECT_DIR)" python
+MODEL_PYTHON = $(UV) run --project "$(PROJECT_DIR)" --extra model --extra $(BACKEND) python
 # 开源项目根目录。
 PROJECT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 # 项目 manifest 与公开 demo 登记文件。
@@ -44,7 +47,7 @@ PORT ?= 8100
 TEXT ?= Artificial intelligence is transforming education. Teachers must adapt their methods.
 
 .PHONY: help env-check manifest-validate demo-validate docs-validate test test-all check \
-	data train calibrate eval serve probe detect demo-refresh clean
+	sync sync-cpu sync-xpu sync-cuda data train calibrate eval serve probe detect demo-refresh clean
 
 help:
 	@printf '%s\n' \
@@ -53,7 +56,9 @@ help:
 	  'demo-validate                     Enforce synthetic-only demos, pinned counts, and hashes' \
 	  'docs-validate                     Validate bilingual docs, local links, and Mermaid blocks' \
 	  'test                              Run the light test subset (no torch, CI-safe)' \
-	  'test-all                          Run the full pytest suite (needs requirements-model.txt)' \
+	  'sync                              Sync model dependencies (BACKEND=xpu by default)' \
+	  'sync-cpu / sync-xpu / sync-cuda    Sync one explicit hardware profile' \
+	  'test-all                          Run the full pytest suite (BACKEND=xpu by default)' \
 	  'check                             Run manifest, demo, docs, and light-test validation' \
 	  'data                              Build the two-level soft-label dataset from a log export' \
 	  '                                  DATA_CSV=<path-to-csv> (required)' \
@@ -66,6 +71,12 @@ help:
 	  'detect                            Detect one sentence; TEXT="<your text>" (optional)' \
 	  'demo-refresh                      Regenerate data/demos/manifest.yaml (maintainer-only)' \
 	  'clean                             Remove the training output directory'
+
+sync:
+	$(UV) sync --project "$(PROJECT_DIR)" --extra model --extra $(BACKEND)
+
+sync-cpu sync-xpu sync-cuda:
+	$(UV) sync --project "$(PROJECT_DIR)" --extra model --extra $(@:sync-%=%)
 
 env-check:
 	@$(PYTHON) --version
@@ -86,7 +97,7 @@ test: env-check
 	  tests/test_harness_validators.py -q
 
 test-all: env-check
-	@cd "$(PROJECT_DIR)" && PYTHONPATH=code $(PYTHON) -m pytest tests -q
+	@cd "$(PROJECT_DIR)" && PYTHONPATH=code $(MODEL_PYTHON) -m pytest tests -q
 
 check: manifest-validate demo-validate docs-validate test
 
@@ -96,19 +107,19 @@ data: env-check
 	  $(DATA_CSV_ARG) $(OLD_CSVS_ARG) $(OLD_SCAN_JSONLS_ARG) --out-dir "$(DATA_OUT_DIR)"
 
 train: env-check
-	@cd "$(PROJECT_DIR)" && $(PYTHON) code/j_train_hier_model.py --model-type $(MODEL_TYPE) \
+	@cd "$(PROJECT_DIR)" && $(MODEL_PYTHON) code/j_train_hier_model.py --model-type $(MODEL_TYPE) \
 	  --train-jsonl "$(TRAIN_JSONL)" --val-jsonl "$(VAL_JSONL)" \
 	  $(INIT_FROM_ARG) $(TOKENIZER_ARG) \
 	  --output-dir "$(RUN_DIR)" --alpha $(ALPHA) $(OVERSAMPLE_ARG)
 
 calibrate: env-check
 	@test -d "$(BEST)" || { echo 'BEST is required (train first, or set BEST=<checkpoint dir>)'; exit 2; }
-	@cd "$(PROJECT_DIR)" && $(PYTHON) code/k_calibrate_hier_model.py --model-type $(MODEL_TYPE) \
+	@cd "$(PROJECT_DIR)" && $(MODEL_PYTHON) code/k_calibrate_hier_model.py --model-type $(MODEL_TYPE) \
 	  --model-dir "$(BEST)" --val-jsonl "$(VAL_JSONL)"
 
 eval: env-check
 	@test -d "$(BEST)" || { echo 'BEST is required (train first, or set BEST=<checkpoint dir>)'; exit 2; }
-	@cd "$(PROJECT_DIR)" && $(PYTHON) code/l_eval_hier_model.py --model-type $(MODEL_TYPE) \
+	@cd "$(PROJECT_DIR)" && $(MODEL_PYTHON) code/l_eval_hier_model.py --model-type $(MODEL_TYPE) \
 	  --model-dir "$(BEST)" --val-jsonl "$(VAL_JSONL)"
 
 serve: env-check
@@ -116,18 +127,18 @@ serve: env-check
 	@cd "$(PROJECT_DIR)" && AI_DETECT_MODEL_TYPE=$(MODEL_TYPE) \
 	  AI_DETECT_MODEL_DIR="$(abspath $(BEST))" \
 	  AI_DETECT_HOST=$(HOST) AI_DETECT_PORT=$(PORT) \
-	  $(PYTHON) code/m_serve_hier_api.py
+	  $(MODEL_PYTHON) code/m_serve_hier_api.py
 
 # 起服务后另开终端执行；返回应含 code=0 和 documents[0].predictedClass。
 probe:
 	curl -s -X POST localhost:$(PORT)/detect \
 	  -H 'Content-Type: application/json' \
 	  -d '{"text": "Artificial intelligence is transforming education. Teachers must adapt their methods."}' \
-	  | python3 -c "import json,sys; d=json.load(sys.stdin); print('code =', d['code']); print('predictedClass =', d['data']['documents'][0]['predictedClass'])"
+	  | $(PYTHON) -c "import json,sys; d=json.load(sys.stdin); print('code =', d['code']); print('predictedClass =', d['data']['documents'][0]['predictedClass'])"
 
 # 单句检测（句子可配置）：make detect TEXT="你要检测的句子。"
 detect:
-	TEXT="$(TEXT)" python3 -c "\
+	TEXT="$(TEXT)" $(PYTHON) -c "\
 	import json, os, urllib.request;\
 	req = urllib.request.Request(\
 	    'http://localhost:$(PORT)/detect',\

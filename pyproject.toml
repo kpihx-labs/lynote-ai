@@ -4,12 +4,13 @@ build-backend = "uv_build"
 
 [project]
 name = "lynote-ai"
-version = "0.1.1"
+version = "0.1.2"
 description = "Local explainable CLI for AI-generated text risk analysis; adapted from Lynote."
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [{ name = "Open Source Contributors" }]
+license-files = ["LICENSE"]
 keywords = ["ai-detection", "agent-skill", "claude-code", "codex", "text-analysis"]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -24,6 +25,12 @@ lynote-ai = "aidetect.cli:main"
 
 [tool.uv.build-backend]
 module-name = "aidetect"
+source-include = [
+    "Makefile", "tests/**", "scripts/**", "examples/**", "RELEASE-NOTES.md",
+    "CONTRIBUTING.md", "README.zh-CN.md", "docs/**", "references/**",
+    ".claude/skills/ai-detector/SKILL.md", "detection-model-pipeline/**",
+]
+source-exclude = ['*\~', "*.bak", ".venv", ".pytest_cache", ".env", "*.egg-info", ".git"]
 
 [project.urls]
 Repository = "https://github.com/kpihx-labs/lynote-ai"
