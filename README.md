@@ -13,6 +13,29 @@ The local analyzer uses heuristics, not Lynote's hosted model. A low score is no
 proof of human authorship, and an insufficient-text result is an abstention.
 This is not a plagiarism or source-matching service.
 
+### Current CLI (0.2.0)
+
+```bash
+lynote-ai --help
+lynote-ai --help-all                 # every command, parameters and examples
+lynote-ai scan document.txt --json
+lynote-ai compare first.txt second.txt --json
+lynote-ai info --json                # engine and language limitations, no analysis
+```
+
+The CLI uses Typer and Rich: command groups, per-command examples, compact summary
+tables and all six evidence signals. JSON stays clean on stdout and retains the
+original core fields with additional `timings.analysis_seconds` and engine metadata.
+Historical `lynote-ai document.txt --json` and stdin invocations remain supported.
+Input errors are concise; files must be UTF-8, and literal text is passed explicitly
+through `--text` rather than silently treating a missing path as prose.
+
+This release does not change the heuristic scores or claim new language support.
+English-only marker/transition lists and ASCII Latin word matching break accented
+French words; the CJK branch alone does not establish multilingual calibration.
+The multilingual neural training pipeline described below is a separate component
+and does not supply pretrained detector weights to the installed `lynote-ai` CLI.
+
 The remaining upstream documentation is retained for provenance, with operational
 examples updated from the historical `ai-detect` command to `uv run lynote-ai`.
 
